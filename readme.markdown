@@ -1,4 +1,4 @@
-GitHub Copilot: # Web Scraper for Shanghai Ranking
+# Web Scraper for Shanghai Ranking
 
 This project is a Node.js script that uses Puppeteer to scrape the table displayed on the Shanghai Ranking website. The script navigates to the page, interacts with the website's UI to select different subjects, and then scrapes the data from the displayed table.
 
