@@ -1,15 +1,47 @@
-// This nodejs script uses puppeteer to scrape the table displayed on https://www.shanghairanking.com/rankings/gras/2023/RSXXXX
-
-import { exit } from 'process';
 import puppeteer from 'puppeteer';
-
 import fs from 'fs';
+import { exit } from 'process';
 
-// Get the output destination as a command line argument
-const outputDestination = process.argv[2] || 'rankings-data.json';
+const args = process.argv.slice(2);
+
+// Arguments will be in the form: --argumentName=argumentValue
+// The arguments are as follows:
+// --year: The year to scrape data for
+// --output: The output destination for the data
+// --format: The format to output the data in (json or csv)
+
+// Default values
+let year = '2023';
+let outputDestination = null;
+let format = 'json';
+
+args.forEach(arg => {
+    const [key, value] = arg.split('=');
+    if (key === '--year') {
+        year = value;
+    } else if (key === '--output') {
+        outputDestination = value;
+    } else if (key === '--format') {
+        format = value;
+    }
+});
+
+if (format !== 'json' && format !== 'csv') {
+    console.error('Invalid format. Must be either "json" or "csv".');
+    exit(1);
+}
+
+if (isNaN(year) || year < 2017 || year > 2023) {
+    console.error('Invalid year. Must be an integer between 2017 and 2023.');
+    exit(1);
+}
+
+if (!outputDestination) {
+    outputDestination = `./output/rankings-${year}.${format}`;
+}
 
 // Set the first page
-let currentPage = 'https://www.shanghairanking.com/rankings/gras/2023/RS0101';
+let currentPage = 'https://www.shanghairanking.com/rankings/gras/'+ year +'/RS0101';
 
 (async () => {
     console.log('Starting up...');
@@ -37,10 +69,39 @@ let currentPage = 'https://www.shanghairanking.com/rankings/gras/2023/RS0101';
     // Done, close the browser
     await browser.close();
 
-    // Store all the data in a JSON file
-    fs.writeFileSync(outputDestination, JSON.stringify(fullData));
-    console.log(`Data written to ${outputDestination}`);
+    if (format === 'json') {
+        // Store all the data in a JSON file
+        fs.writeFileSync(outputDestination, JSON.stringify(fullData));
+        console.log(`Data written to ${outputDestination}`);
+    } else if (format === 'csv') {
+
+        // Convert the data to CSV format, and write that to a CSV file. Each row will be:
+        // Category, Subject, Rank, University, Country, Total Score, Q1
+
+        let csvData = [];
+
+        // First create the header row
+        csvData.push('Category,Subject,Rank,University,Country,Total Score,Q1');
+
+        fullData.forEach(item => {
+            item.data.rows.forEach(row => {
+                // Make sure to avoid problems with commas by putting the university name in quotes
+
+                csvData.push(`${item.category},${item.subject},${row[0]},"${row[1]}",${row[2]},${row[3]},${row[4]}`);
+            });
+        });
+
+        fs.writeFileSync(outputDestination, csvData.join('\n'));
+        console.log(`Data written to ${outputDestination}`);
+    } else {
+        // Print the data to the console
+        console.log(fullData);
+    }
 })();
+
+
+
+
 
 // Helper function for grabbing the data from the current table on the page
 async function scrapeTable(page) 
