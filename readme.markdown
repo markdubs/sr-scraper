@@ -13,13 +13,20 @@ This project is a Node.js script that uses Puppeteer to scrape the table display
 2. Install the dependencies with `npm install`.
 3. Run the script with `node scraper.js [--year=] [--output=] [--format=]`.
 
-The script takes three optional command line arguments. The first is the year of rankings, which defaults to `2023`. The second is the destination where the scraped data will be written. And the third is the format (JSON or CSV) If no argument is provided, the data will be written to `./output/rankings-<YEAR>.<FORMAT>`.
+The script takes three optional command line arguments. The first is the year of rankings, which defaults to `2023`. The second is the destination where the scraped data will be written. And the third is the format (JSON or CSV) If no argument is provided, the data will be written to `./output/rankings-<YEAR (IF SPECIFIED)>.<FORMAT>`.
 
 ## How it Works
+
+### Old Version scraper.js
 
 The script first navigates to the initial page of the ranking website. It then clicks on the subject selector and waits for the subject tooltip to become visible. Once the tooltip is visible, the script gets the full list of subjects.
 
 For each subject, the script navigates to the corresponding page and scrapes the data from the table. The data is then written to the specified output file in JSON/CSV format.
+
+### New Version: scraper-supreme.js
+
+The script loads the first page, grabs the nuxt object and finds all data about which subjects are needed and their corresponding pages. It then loads each subject page and grabs all data for that subject. If you don't specify a year then
+it will grab all possible years.
 
 ## Note
 
